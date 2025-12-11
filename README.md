@@ -46,12 +46,6 @@ Next, we'll start the frontend.
 cd frontend
 pnpm install
 
-# Create and populate .env
-cat << EOF > .env
-OPENAI_API_KEY=your_openai_key
-LANGSMITH_API_KEY=your_langsmith_key
-EOF
-
 # Start the app
 pnpm run dev
 ```
