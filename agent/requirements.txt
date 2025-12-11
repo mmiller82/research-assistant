@@ -1,0 +1,13 @@
+langgraph
+langgraph-api
+langgraph-cli
+langchain-core
+langchain-community
+langchain-openai
+langchain-tavily
+trustcall
+ipython
+markdown
+wikipedia
+fastapi
+uvicorn

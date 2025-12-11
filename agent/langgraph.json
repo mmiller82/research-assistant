@@ -1,0 +1,11 @@
+{
+    "dockerfile_lines": [],
+    "env_file": ".env",
+    "graphs": {
+      "research_assistant": "research_assistant:graph"
+    },
+    "python_version": "3.11",
+    "dependencies": [
+      "."
+    ]
+  }
