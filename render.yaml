@@ -1,7 +1,6 @@
 databases:
   - name: langgraph-postgres # Render PG16
-    databaseName: private
-    user: postgres
+    databaseName: postgres
     postgresMajorVersion: "16"
 
 
