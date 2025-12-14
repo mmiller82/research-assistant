@@ -2,12 +2,12 @@ FROM langchain/langgraph-api:3.11
 
 
 # -- Installing local requirements --
-ADD requirements.txt /deps/outer-agent/agent/requirements.txt
+ADD agent/requirements.txt /deps/outer-agent/agent/requirements.txt
 RUN PYTHONDONTWRITEBYTECODE=1 uv pip install --system --no-cache-dir -c /api/constraints.txt -r /deps/outer-agent/agent/requirements.txt
 # -- End of local requirements install --
 
 # -- Adding non-package dependency agent --
-ADD . /deps/outer-agent/agent
+ADD agent/. /deps/outer-agent/agent
 RUN set -ex && \
     for line in '[project]' \
                 'name = "agent"' \

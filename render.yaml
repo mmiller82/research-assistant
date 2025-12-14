@@ -12,7 +12,7 @@ services:
   - type: web
     name: langgraph-api
     runtime: docker
-    dockerfilePath: ./agent/Dockerfile
+    dockerfilePath: ./Dockerfile
     envVars:
       - key: PORT
         value: 8000
@@ -25,4 +25,7 @@ services:
         fromDatabase:
           name: langgraph-postgres
           property: connectionString
+    disk:
+      name: langgraph-data
+      mountPath: /
   
