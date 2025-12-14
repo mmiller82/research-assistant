@@ -12,7 +12,6 @@ services:
   - type: web
     name: langgraph-api
     runtime: docker
-    dockerfilePath: ./Dockerfile
     envVars:
       - key: PORT
         value: 8000
