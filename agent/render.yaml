@@ -1,0 +1,54 @@
+databases:
+  - type: postgres
+  - name: langgraph-postgres # Render PG16
+    databaseName: postgres
+    user: postgres
+    postgresMajorVersion: 16
+    envVars:
+      - key: POSTGRES_DB
+        value: postgres
+      - key: POSTGRES_USER
+        value: postgres
+      - key: POSTGRES_PASSWORD
+        value: postgres
+
+
+services:
+  - type: redis # Render Redis
+    name: langgraph-redis
+    ipAllowList: []
+
+  - type: web
+    name: langgraph-api
+    env: docker
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: REDIS_URI
+        fromService:
+          type: redis
+          name: langgraph-redis
+          property: connectionString
+      - key: POSTGRES_URI
+        fromService:
+          type: postgres
+          name: langgraph-postgres
+          property: connectionString
+
+    name: anycable
+    env: ruby
+    buildCommand: ...
+    startCommand: bundle exec anycable
+    envVars:
+      - key: ANYCABLE_REDIS_URL
+        fromService:
+          type: redis
+          name: anycable-redis
+          property: connectionString
+      - key: ANYCABLE_RPC_HOST
+        value: "0.0.0.0:50051"
+      - key: ANYCABLE_DEBUG
+        value: 1
+      - key: PORT
+        value: 50051
