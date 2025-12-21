@@ -27,6 +27,7 @@ dist-ssr
 
 # LangGraph API
 .langgraph_api
-.env
+.env*
 .next/
 next-env.d.ts
+agent/__pycache__

@@ -1,6 +1,7 @@
 FROM langchain/langgraph-api:3.11
 
 
+
 # -- Installing local requirements --
 ADD requirements.txt /deps/outer-agent/agent/requirements.txt
 RUN PYTHONDONTWRITEBYTECODE=1 uv pip install --system --no-cache-dir -c /api/constraints.txt -r /deps/outer-agent/agent/requirements.txt
@@ -39,3 +40,7 @@ RUN rm -rf /usr/lib/python*/site-packages/pip* /usr/lib/python*/site-packages/se
 RUN uv pip uninstall --system pip setuptools wheel && rm /usr/bin/uv /usr/bin/uvx
 
 WORKDIR /deps/outer-agent/agent
+
+# Command to run your application, using Gunicorn or Uvicorn
+# It's best to read from the PORT environment variable
+CMD ["uvicorn", "app.server:app", "--host", "0.0.0.0", "--port", "8080"]
