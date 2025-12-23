@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { Client } from '@langchain/langgraph-sdk'
 import ReactMarkdown from 'react-markdown'
+import { firebaseConfig } from './firebase'
 import './ResearchAssistant.css'
+
 
 const ResearchAssistant = () => {
   const [topic, setTopic] = useState('')
@@ -15,7 +17,22 @@ const ResearchAssistant = () => {
   const [isInterrupted, setIsInterrupted] = useState(false)
   const [createdAnalysts, setCreatedAnalysts] = useState(null)
 
-  const client = new Client({ apiUrl: 'http://localhost:8123' })
+
+  const createClient = () => {
+
+    const client = new Client({
+      apiUrl: window.location.origin,
+      defaultHeaders: {
+          "Content-Type": "application/json",
+          "X-Api-Key": firebaseConfig.apiKey,
+        }
+      }
+    )
+
+    return client;
+  }
+    
+  const client = createClient();
 
   const handleSubmit = async (e) => {
     e.preventDefault()
