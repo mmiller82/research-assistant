@@ -26,7 +26,7 @@ RUN set -ex && \
 RUN for dep in /deps/*; do             echo "Installing $dep";             if [ -d "$dep" ]; then                 echo "Installing $dep";                 (cd "$dep" && PYTHONDONTWRITEBYTECODE=1 uv pip install --system --no-cache-dir -c /api/constraints.txt -e .);             fi;         done
 # -- End of local dependencies install --
 ENV LANGSERVE_GRAPHS='{"research_assistant": "research_assistant:graph"}'
-
+ENV PORT=8080
 
 
 # -- Ensure user deps didn't inadvertently overwrite langgraph-api
@@ -40,7 +40,3 @@ RUN rm -rf /usr/lib/python*/site-packages/pip* /usr/lib/python*/site-packages/se
 RUN uv pip uninstall --system pip setuptools wheel && rm /usr/bin/uv /usr/bin/uvx
 
 WORKDIR /deps/outer-agent/agent
-
-# Command to run your application, using Gunicorn or Uvicorn
-# It's best to read from the PORT environment variable
-CMD ["uvicorn", "app.server:app", "--host", "0.0.0.0", "--port", "8080"]

@@ -33,3 +33,4 @@ next-env.d.ts
 agent/__pycache__
 agent/out
 agent/openapi-run.yaml
+agent/docker-compose.yml
