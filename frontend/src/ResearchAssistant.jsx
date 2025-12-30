@@ -18,21 +18,22 @@ const ResearchAssistant = () => {
   const [createdAnalysts, setCreatedAnalysts] = useState(null)
 
 
-  const createClient = () => {
+  // API Gateway client for non-streaming endpoints (with API key auth)
+  const apiGatewayClient = new Client({
+    apiUrl: firebaseConfig.apiUrl,
+    defaultHeaders: {
+      "Content-Type": "application/json",
+      "X-Api-Key": firebaseConfig.apiKey,
+    }
+  });
 
-    const client = new Client({
-      apiUrl: window.location.origin,
-      defaultHeaders: {
-          "Content-Type": "application/json",
-          "X-Api-Key": firebaseConfig.apiKey,
-        }
-      }
-    )
-
-    return client;
-  }
-    
-  const client = createClient();
+  // Cloud Run client for streaming endpoints (to avoid API Gateway streaming limitations)
+  const streamingClient = new Client({
+    apiUrl: firebaseConfig.cloudRunUrl,
+    defaultHeaders: {
+      "Content-Type": "application/json",
+    }
+  });
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -56,12 +57,12 @@ const ResearchAssistant = () => {
         human_analyst_feedback: humanFeedback
       }
 
-      // Create a thread
-      const thread = await client.threads.create()
+      // Create a thread using API Gateway (secure with API key)
+      const thread = await apiGatewayClient.threads.create()
       setThreadId(thread.thread_id)
 
-      // Stream the graph execution
-      const streamResponse = client.runs.stream(
+      // Stream the graph execution using Cloud Run (supports streaming)
+      const streamResponse = streamingClient.runs.stream(
         thread.thread_id,
         'research_assistant',
         {
@@ -139,16 +140,16 @@ const ResearchAssistant = () => {
     setCurrentStatus('Continuing research with updated feedback...')
 
     try {
-      // Update the thread state with new human feedback
-      await client.threads.updateState(
+      // Update the thread state with new human feedback using API Gateway
+      await apiGatewayClient.threads.updateState(
         threadId,
         {
           values: { human_analyst_feedback: humanFeedback }
         }
       )
 
-      // Resume the run by streaming again
-      const streamResponse = client.runs.stream(
+      // Resume the run by streaming again using Cloud Run
+      const streamResponse = streamingClient.runs.stream(
         threadId,
         'research_assistant',
         {
