@@ -1,0 +1,221 @@
+# openapi-run.yaml
+swagger: "2.0"
+info:
+  title: agent-api
+  description: API for agent running in Cloud Run
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: maury.miller@ieee.org
+host: agent-69847416078.us-west1.run.app
+basePath: /
+schemes:
+  - https
+produces:
+  - application/json
+consumes:
+  - application/json
+
+x-google-backend:
+  address: https://agent-69847416078.us-west1.run.app
+  path_translation: APPEND_PATH_TO_ADDRESS
+  deadline: 60.0
+
+x-google-management:
+  metrics:
+    - name: "requests"
+      displayName: "Requests"
+      valueType: INT64
+      metricKind: DELTA
+  quota:
+    limits:
+      - name: "requests-per-minute-limit"
+        metric: "requests"
+        unit: "1/min/{project}"
+        values:
+          STANDARD: 100
+
+tags:
+  - name: threads
+    description: Operations for managing threads
+  - name: runs
+    description: Operations for managing runs
+  - name: state
+    description: Operations for managing run state
+
+securityDefinitions:
+  api_key:
+    type: apiKey
+    name: x-api-key
+    in: header
+  firebase_auth:
+    authorizationUrl: ""
+    flow: implicit
+    type: oauth2
+    x-google-issuer: "https://securetoken.google.com/research-assistant-6603f"
+    x-google-jwks_uri: "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com"
+    x-google-audiences: "research-assistant-6603f"
+
+paths:
+  /threads:
+    options:
+      tags:
+        - threads
+      summary: "CORS support"
+      description: "CORS preflight support for thread creation"
+      operationId: "corsThreads"
+      security: []
+      responses:
+        "200":
+          description: "CORS response"
+          schema:
+            type: "string"
+    post:
+      tags:
+        - threads
+      summary: Agent Cloud Run API
+      description: "Create or interact with an agent thread"
+      operationId: agent
+      security:
+        - api_key: []
+          firebase_auth: []
+      responses:
+        "200":
+          description: A successful response
+          schema:
+            type: string
+          headers:
+            Access-Control-Allow-Origin:
+              type: string
+              description: CORS header
+      x-google-quota:
+        metricCosts:
+          "requests": 1
+
+  /threads/{thread_id}:
+    options:
+      tags:
+        - threads
+      summary: "CORS for thread operations"
+      description: "CORS preflight support for thread operations"
+      operationId: "corsThreadId"
+      security: []
+      parameters:
+        - name: thread_id
+          in: path
+          required: true
+          type: string
+      responses:
+        "200":
+          description: "CORS for thread operations response"
+          schema:
+            type: "string"
+
+  /threads/{thread_id}/runs:
+    options:
+      tags:
+        - runs
+      summary: "CORS for runs"
+      description: "CORS preflight support for run operations"
+      operationId: "corsRuns"
+      security: []
+      parameters:
+        - name: thread_id
+          in: path
+          required: true
+          type: string
+      responses:
+        "200":
+          description: "CORS for runs response"
+          schema:
+            type: "string"
+
+  /threads/{thread_id}/runs/stream:
+    options:
+      tags:
+        - runs
+      summary: "CORS for stream run"
+      description: "CORS preflight support for streaming run"
+      operationId: "corsStream"
+      security: []
+      parameters:
+        - name: thread_id
+          in: path
+          required: true
+          type: string
+      responses:
+        "200":
+          description: "CORS for stream run response"
+          schema:
+            type: "string"
+    post:
+      tags:
+        - runs
+      summary: "Stream run"
+      description: "Stream the execution of a run for a thread"
+      operationId: "streamRun"
+      security:
+        - api_key: []
+          firebase_auth: []
+      parameters:
+        - name: thread_id
+          in: path
+          required: true
+          type: string
+      responses:
+        "200":
+          description: "Stream run response"
+          schema:
+            type: string
+          headers:
+            Access-Control-Allow-Origin:
+              type: string
+              description: CORS header
+      x-google-quota:
+        metricCosts:
+          "requests": 1
+
+  /threads/{thread_id}/state:
+    options:
+      tags:
+        - state
+      summary: "CORS for run state"
+      description: "CORS preflight support for state operations"
+      operationId: "corsState"
+      security: []
+      parameters:
+        - name: thread_id
+          in: path
+          required: true
+          type: string
+      responses:
+        "200":
+          description: "CORS run state response"
+          schema:
+            type: "string"
+    post:
+      tags:
+        - state
+      summary: "Stream run state"
+      description: "Stream the state of a run for a thread"
+      operationId: "streamRunState"
+      security:
+        - api_key: []
+          firebase_auth: []
+      parameters:
+        - name: thread_id
+          in: path
+          required: true
+          type: string
+      responses:
+        "200":
+          description: "Stream run state response"
+          schema:
+            type: string
+          headers:
+            Access-Control-Allow-Origin:
+              type: string
+              description: CORS header
+      x-google-quota:
+        metricCosts:
+          "requests": 1

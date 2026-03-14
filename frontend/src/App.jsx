@@ -1,4 +1,3 @@
-import React from 'react'
 import ResearchAssistant from './ResearchAssistant'
 import './App.css'
 
