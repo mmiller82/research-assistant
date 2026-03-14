@@ -35,6 +35,45 @@ The application will be available at `http://localhost:3000`
 pnpm run build
 ```
 
+This runs `vite build` and outputs static files to the `dist/` directory.
+
+## Deploying to Firebase Hosting
+
+### Prerequisites
+
+1. Install the Firebase CLI:
+
+   ```bash
+   npm install -g firebase-tools
+   ```
+
+2. Log in to Firebase:
+
+   ```bash
+   firebase login
+   ```
+
+### Deploy
+
+From the `frontend/` directory:
+
+```bash
+pnpm run build
+firebase deploy --only hosting
+```
+
+This deploys the `dist/` directory to the `research-assistant` Firebase project as configured in `.firebaserc` and `firebase.json`.
+
+The `firebase.json` hosting config includes rewrites that proxy `/threads` and `/threads/**` requests to the API gateway, so the deployed app can communicate with the LangGraph backend.
+
+### Preview (optional)
+
+To test the production build locally before deploying:
+
+```bash
+firebase emulators:start --only hosting
+```
+
 ## How It Works
 
 The frontend uses the `@langchain/langgraph-sdk` Client to:

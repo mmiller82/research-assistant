@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Client } from '@langchain/langgraph-sdk'
 import ReactMarkdown from 'react-markdown'
-import { firebaseConfig } from './firebase'
+import { firebaseConfig, GithubAuthentication, signOutUser, auth } from './firebase'
+import { onAuthStateChanged } from 'firebase/auth'
 import './ResearchAssistant.css'
 
 
@@ -16,23 +17,74 @@ const ResearchAssistant = () => {
   const [finalReport, setFinalReport] = useState(null)
   const [isInterrupted, setIsInterrupted] = useState(false)
   const [createdAnalysts, setCreatedAnalysts] = useState(null)
+  const [user, setUser] = useState(null)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [authLoading, setAuthLoading] = useState(true)
+  const [authError, setAuthError] = useState(null)
 
-
-  const createClient = () => {
-
-    const client = new Client({
-      apiUrl: window.location.origin,
-      defaultHeaders: {
-          "Content-Type": "application/json",
-          "X-Api-Key": firebaseConfig.apiKey,
-        }
+  // Listen for auth state changes
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        setUser({
+          uid: firebaseUser.uid,
+          displayName: firebaseUser.displayName,
+          email: firebaseUser.email,
+          photoURL: firebaseUser.photoURL
+        })
+        setIsAuthenticated(true)
+        setAuthLoading(false)
+      } else {
+        // User is signed out
+        setUser(null)
+        setIsAuthenticated(false)
+        setAuthLoading(false)
       }
-    )
+    })
 
-    return client;
+    return () => unsubscribe()
+  }, [])
+
+  const handleSignIn = async () => {
+    setAuthLoading(true)
+    setAuthError(null)
+    try {
+      const { user: userData } = await GithubAuthentication()
+      setUser(userData)
+      setIsAuthenticated(true)
+    } catch (error) {
+      console.error('Sign in error:', error)
+      setAuthError(error.message)
+    } finally {
+      setAuthLoading(false)
+    }
   }
-    
-  const client = createClient();
+
+  const handleSignOut = async () => {
+    try {
+      await signOutUser()
+      setUser(null)
+      setIsAuthenticated(false)
+      setAuthError(null)
+    } catch (error) {
+      console.error('Sign out error:', error)
+      setAuthError('Failed to sign out')
+    }
+  }
+
+  // Build client using a fresh ID token to ensure Authorization header is set.
+  // All requests go through the API Gateway, which handles auth and proxies to Cloud Run.
+  const getClient = async () => {
+    const token = await auth.currentUser.getIdToken()
+    return new Client({
+      apiUrl: firebaseConfig.apiUrl,
+      defaultHeaders: {
+        "Content-Type": "application/json",
+        "X-Api-Key": firebaseConfig.apiGatewayKey,
+        "Authorization": `Bearer ${token}`,
+      }
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -50,6 +102,8 @@ const ResearchAssistant = () => {
     setCreatedAnalysts(null)
 
     try {
+      const client = await getClient()
+
       const input = {
         topic: topic,
         max_analysts: maxAnalysts,
@@ -139,6 +193,8 @@ const ResearchAssistant = () => {
     setCurrentStatus('Continuing research with updated feedback...')
 
     try {
+      const client = await getClient()
+
       // Update the thread state with new human feedback
       await client.threads.updateState(
         threadId,
@@ -147,7 +203,7 @@ const ResearchAssistant = () => {
         }
       )
 
-      // Resume the run by streaming again
+      // Resume the run by streaming
       const streamResponse = client.runs.stream(
         threadId,
         'research_assistant',
@@ -234,11 +290,61 @@ const ResearchAssistant = () => {
     )
   }
 
+  // Show loading screen while checking auth status
+  if (authLoading) {
+    return (
+      <div className="research-assistant">
+        <div className="auth-container">
+          <h2>Research Assistant</h2>
+          <p>Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show sign-in screen if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="research-assistant">
+        <div className="auth-container">
+          <h2>Research Assistant</h2>
+          <p>AI-powered research tool with multiple analysts</p>
+          <div className="auth-content">
+            <p>Please sign in with GitHub to continue</p>
+            {authError && (
+              <div className="auth-error">
+                <p>{authError}</p>
+              </div>
+            )}
+            <button onClick={handleSignIn} className="btn-signin">
+              Sign in with GitHub
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="research-assistant">
       <header className="header">
-        <h2>Research Assistant</h2>
-        <p>AI-powered reseach tool with multiple analysts</p>
+        <div className="header-content">
+          <div>
+            <h2>Research Assistant</h2>
+            <p>AI-powered research tool with multiple analysts</p>
+          </div>
+          <div className="user-info">
+            {user?.photoURL && (
+              <img src={user.photoURL} alt="User avatar" className="user-avatar" />
+            )}
+            <div className="user-details">
+              <span className="user-name">{user?.displayName || user?.email || 'User'}</span>
+              <button onClick={handleSignOut} className="btn-signout">
+                Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
       </header>
 
       <div className="container">
@@ -293,7 +399,7 @@ const ResearchAssistant = () => {
         {currentStatus && (
           <div className="status">
             <strong>Status:</strong> {currentStatus}
-          </div>
+          </div> 
         )}
 
         {isInterrupted && createdAnalysts && (
