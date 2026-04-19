@@ -1,7 +1,7 @@
 from langchain_openai import ChatOpenAI
 from langchain_community.document_loaders import WikipediaLoader
-from agent.common import InterviewState
-from agent.tools.seach_instructions import SearchQuery, search_instructions
+from common import InterviewState
+from tools.seach_instructions import SearchQuery, search_instructions
 
 
 def search_wikipedia(state: InterviewState, llm: ChatOpenAI):

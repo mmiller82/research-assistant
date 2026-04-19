@@ -11,9 +11,9 @@ from langchain_openai import ChatOpenAI
 from langgraph.constants import Send
 from langgraph.graph import END, START, StateGraph
 
-from agent.common import Analyst, InterviewState
-from agent.tools import search_web, search_wikipedia
-from agent.constants import (
+from common import Analyst, InterviewState
+from tools import search_web, search_wikipedia
+from constants import (
     MODEL_NAME,
     MODEL_TEMPERATURE,
     DEFAULT_MAX_ANALYSTS,
@@ -328,12 +328,15 @@ def begin_all_interviews(state: ResearchGraphState):
 
     # Otherwise kick off interviews in parallel via Send() API
     else:
+        analysts = state.get("analysts")
+        if not analysts:
+            return "create_analysts"
         topic = state["topic"]
         return [Send("conduct_interview", {"analyst": analyst,
                                            "messages": [HumanMessage(
                                                content=f"So you said you were writing an article on {topic}?"
                                            )
-                                                       ]}) for analyst in state["analysts"]]
+                                                       ]}) for analyst in analysts]
 
 # Write a report based on the interviews
 report_writer_instructions = """You are a technical writer creating a report on this overall topic: 

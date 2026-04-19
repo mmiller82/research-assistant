@@ -33,7 +33,7 @@ LANGSMITH_API_KEY=your_key
 EOF
 
 ## Start the agent
-langgraph up or langraph build -t {myimage} and docker compose up
+langgraph up or langgraph build -t research-assistant:latest and docker compose up
 
 # Note the API URL from the output (e.g., http://localhost:8123)
 ```
