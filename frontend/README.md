@@ -76,7 +76,7 @@ firebase emulators:start --only hosting
 
 ## CI/CD — GitHub Actions
 
-The workflow at `.github/workflows/frontend-pipeline.yaml` builds the frontend and deploys it to Firebase Hosting automatically.
+The workflow at `.github/workflows/frontend-pipeline.yaml` builds the frontend and deploys it to Firebase Hosting automatically through the following triggers.
 
 ### Triggers
 
