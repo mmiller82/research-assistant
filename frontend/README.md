@@ -87,7 +87,7 @@ The workflow at `.github/workflows/frontend-pipeline.yaml` builds the frontend a
 
 ### What it does
 
-1. Checks out the repo and sets up pnpm + Node 22.
+1. Checks out the repo and sets up pnpm 9 + Node 22.
 2. Runs `pnpm install` and `pnpm run build` inside the `frontend/` directory.
 3. Deploys the `dist/` output to Firebase Hosting via `FirebaseExtended/action-hosting-deploy@v0`.
 
