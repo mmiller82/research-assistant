@@ -74,6 +74,37 @@ To test the production build locally before deploying:
 firebase emulators:start --only hosting
 ```
 
+## CI/CD — GitHub Actions
+
+The workflow at `.github/workflows/frontend-pipeline.yaml` builds the frontend and deploys it to Firebase Hosting automatically.
+
+### Triggers
+
+| Event | Condition |
+|-------|-----------|
+| `push` | Any commit that changes a file under `frontend/` |
+| `workflow_dispatch` | Manual run from the GitHub Actions UI (requires the workflow to be on the default branch) |
+
+### What it does
+
+1. Checks out the repo and sets up pnpm + Node 22.
+2. Runs `pnpm install` and `pnpm run build` inside the `frontend/` directory.
+3. Deploys the `dist/` output to Firebase Hosting via `FirebaseExtended/action-hosting-deploy@v0`.
+
+### Required secrets
+
+Add these in **Settings → Secrets and variables → Actions** on the GitHub repo:
+
+| Secret | Description |
+|--------|-------------|
+| `FIREBASE_SERVICE_ACCOUNT_RESEARCH_ASSISTANT_6603F` | Firebase service account JSON with Hosting deploy permissions |
+
+`GITHUB_TOKEN` is provided automatically by GitHub and does not need to be added manually.
+
+### Manual trigger
+
+The "Run workflow" button appears in the **Actions** tab only after the workflow file has been merged into the default branch (`master`). Until then, push any change under `frontend/` to trigger the pipeline via the `push` path.
+
 ## How It Works
 
 The frontend uses the `@langchain/langgraph-sdk` Client to:
