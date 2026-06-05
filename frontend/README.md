@@ -94,11 +94,21 @@ The workflow at `.github/workflows/frontend-pipeline.yaml` builds the frontend a
 
 ### Required secrets
 
-Add these in **Settings → Secrets and variables → Actions** on the GitHub repo:
+Add these under **Settings → Secrets and variables → Actions → Repository secrets**:
 
 | Secret | Description |
 |--------|-------------|
 | `FIREBASE_SERVICE_ACCOUNT_RESEARCH_ASSISTANT_6603F` | Firebase service account JSON with Hosting deploy permissions |
+| `VITE_FIREBASE_API_KEY` | Firebase project API key |
+| `VITE_FIREBASE_AUTH_DOMAIN` | Firebase auth domain (e.g. `your-project.firebaseapp.com`) |
+| `VITE_FIREBASE_PROJECT_ID` | Firebase project ID |
+| `VITE_FIREBASE_STORAGE_BUCKET` | Firebase storage bucket (e.g. `your-project.appspot.com`) |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Firebase Cloud Messaging sender ID |
+| `VITE_FIREBASE_APP_ID` | Firebase app ID |
+| `VITE_FIREBASE_MEASUREMENT_ID` | Google Analytics measurement ID |
+| `VITE_API_GATEWAY_KEY` | API Gateway key passed as `X-Api-Key` on every request |
+| `VITE_API_GATEWAY_URL` | API Gateway URL the frontend posts to (proxies to the LangGraph backend) |
+| `VITE_CLOUD_RUN_URL` | Cloud Run service URL |
 
 `GITHUB_TOKEN` is provided automatically by GitHub and does not need to be added manually.
 
