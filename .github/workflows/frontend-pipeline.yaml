@@ -26,7 +26,7 @@ jobs:
           node-version: '22'
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --no-frozen-lockfile
 
       - name: Build code
         run: pnpm run build
