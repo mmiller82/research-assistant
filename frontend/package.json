@@ -16,9 +16,14 @@
     "react-markdown": "^9.0.1"
   },
   "devDependencies": {
+    "jest": "^29.0.0",
+    "selenium-webdriver": "^4.44.0",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
-    "vite": "^5.4.2"
+    "vite": "^5.4.21"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["@firebase/util", "esbuild", "protobufjs"]
   }
 }
