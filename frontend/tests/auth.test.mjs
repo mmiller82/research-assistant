@@ -15,7 +15,7 @@ const TEST_USER_EMAIL = process.env.TEST_USER_EMAIL;
 const TEST_USER_PASSWORD = process.env.TEST_USER_PASSWORD;
 
 // Signs in the Firebase test user via REST API and returns real tokens.
-// Requires TEST_USER_EMAIL and TEST_USER_PASSWORD to be set (see .env.local / CI secrets).
+// Requires TEST_USER_EMAIL and TEST_USER_PASSWORD to be set (see Readme)
 async function signInTestUser(apiKey, email, password) {
   const res = await fetch(
     `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`,
