@@ -50,5 +50,50 @@ pnpm install
 pnpm run dev
 ```
 
+## Testing
+
+The frontend has a Selenium WebDriver E2E test suite driven by Jest (`frontend/tests/auth.test.mjs`). Tests cover the login page (unauthenticated) and the main research page (authenticated).
+
+### Running locally
+
+```bash
+cd frontend
+
+# Build and serve the production bundle (tests run against the preview server)
+pnpm run build
+pnpm run preview &
+
+# Run the tests
+pnpm run test
+```
+
+### Environment variables
+
+Create `frontend/.env.local` with the following to enable the authenticated-page tests:
+
+```
+VITE_FIREBASE_API_KEY=your_key
+TEST_USER_EMAIL=your_test_user@example.com
+TEST_USER_PASSWORD=your_test_password
+```
+
+The authenticated tests sign in a real Firebase email/password account via the Firebase REST API and inject the token into `localStorage`. If any of these three variables are missing the authenticated tests are automatically skipped rather than failed.
+
+### CI
+
+The frontend pipeline builds the app with all `VITE_*` secrets baked in, starts a Vite preview server, and runs the full test suite. The following GitHub Actions secrets are required:
+
+| Secret | Used by |
+|---|---|
+| `VITE_FIREBASE_API_KEY` | Build + tests |
+| `VITE_FIREBASE_APP_ID` | Build |
+| `VITE_FIREBASE_AUTH_DOMAIN` | Build |
+| `VITE_FIREBASE_PROJECT_ID` | Build |
+| `VITE_API_GATEWAY_KEY` | Build |
+| `VITE_API_GATEWAY_URL` | Build |
+| `VITE_CLOUD_RUN_URL` | Build |
+| `TEST_USER_EMAIL` | Tests |
+| `TEST_USER_PASSWORD` | Tests |
+
 ## Documentation 📚
 - [LangGraph Platform Docs](https://langchain-ai.github.io/langgraph/cloud/deployment/cloud/)

@@ -30,6 +30,14 @@ jobs:
 
       - name: Build code
         run: pnpm run build
+        env:
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          VITE_API_GATEWAY_KEY: ${{ secrets.VITE_API_GATEWAY_KEY }}
+          VITE_API_GATEWAY_URL: ${{ secrets.VITE_API_GATEWAY_URL }}
+          VITE_CLOUD_RUN_URL: ${{ secrets.VITE_CLOUD_RUN_URL }}
 
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
@@ -38,4 +46,18 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_RESEARCH_ASSISTANT_6603F }}
           projectId: research-assistant-6603f
           channelId: live
-  
+
+      - uses: browser-actions/setup-chrome@v1
+
+      - name: Start preview server
+        run: pnpm run preview &
+
+      - name: Wait for preview server
+        run: npx wait-on http://localhost:4173
+
+      - name: Run Selenium tests
+        run: pnpm run test
+        env:
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
