@@ -3,6 +3,9 @@ import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import { Builder, By, until } from 'selenium-webdriver';
 import chrome from 'selenium-webdriver/chrome';
+import * as fs from 'node:fs/promises';
+import pixelmatch from 'pixelmatch';
+import sharp from 'sharp';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -13,6 +16,8 @@ const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:4173';
 const FIREBASE_API_KEY = process.env.VITE_FIREBASE_API_KEY;
 const TEST_USER_EMAIL = process.env.TEST_USER_EMAIL;
 const TEST_USER_PASSWORD = process.env.TEST_USER_PASSWORD;
+const MODAL_IMAGE = 'login-modal.png';
+const REFERENCE_MODAL_PATH = 'tests/testdata/reference-login-modal.png';
 
 // Signs in the Firebase test user via REST API and returns real tokens.
 // Requires TEST_USER_EMAIL and TEST_USER_PASSWORD to be set (see Readme)
@@ -53,6 +58,40 @@ function buildFirebaseUser(apiKey, { localId, email, idToken, refreshToken, expi
     apiKey,
     appName: '[DEFAULT]'
   };
+}
+
+async function takeScreenshot(driver, file) {
+  const image = await driver.takeScreenshot();
+  await fs.writeFile(file, image, 'base64');
+  return image;
+}
+
+async function performComparison(screenshotBase64, referenceBuffer) {
+  const screenshotBuffer = Buffer.from(screenshotBase64, 'base64');
+
+  const [screenshot, reference] = await Promise.all([
+    sharp(screenshotBuffer).ensureAlpha().raw().toBuffer({ resolveWithObject: true }),
+    sharp(referenceBuffer).ensureAlpha().raw().toBuffer({ resolveWithObject: true }),
+  ]);
+
+  expect(screenshot.info.width).toBe(reference.info.width);
+  expect(screenshot.info.height).toBe(reference.info.height);
+
+  const { width, height } = screenshot.info;
+  const diffBuffer = Buffer.alloc(width * height * 4);
+
+  const numDiffPixels = pixelmatch(
+    screenshot.data, reference.data, diffBuffer,
+    width, height,
+    { threshold: 0.1 }
+  );
+
+  await sharp(diffBuffer, { raw: { width, height, channels: 4 } })
+    .png()
+    .toFile('diff-login-modal.png');
+
+  const diffPercent = (numDiffPixels / (width * height)) * 100;
+  expect(diffPercent).toBeLessThan(1);
 }
 
 describe('Research Assistant', () => {
@@ -112,6 +151,15 @@ describe('Research Assistant', () => {
       expect(await btn.isDisplayed()).toBe(true);
       expect(await btn.isEnabled()).toBe(true);
     }, 15000);
+
+    test('compare login modal', async () => {
+      const modalImage = await takeScreenshot(driver, MODAL_IMAGE);
+      const referenceImage = await fs.readFile(REFERENCE_MODAL_PATH);
+
+      await performComparison(modalImage, referenceImage);
+    }, 15000);
+
+
   });
 
   // ── Main page (authenticated) ─────────────────────────────────────────────
@@ -153,7 +201,7 @@ describe('Research Assistant', () => {
       );
       expect(await heading.getText()).toBe('Research Assistant');
       expect(await heading.isDisplayed()).toBe(true);
-    }, 15000);
+    }, 15000);  
 
     itAuth('research form inputs are visible', async () => {
       await driver.wait(until.elementLocated(By.css('.input-form')), 10000);

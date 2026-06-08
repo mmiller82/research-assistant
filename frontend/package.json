@@ -17,15 +17,22 @@
     "react-markdown": "^9.0.1"
   },
   "devDependencies": {
-    "dotenv": "^16.0.0",
-    "jest": "^29.0.0",
-    "selenium-webdriver": "^4.44.0",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
+    "dotenv": "^16.0.0",
+    "jest": "^29.0.0",
+    "pixelmatch": "^7.2.0",
+    "selenium-webdriver": "^4.44.0",
+    "sharp": "^0.34.5",
     "vite": "^5.4.21"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["@firebase/util", "esbuild", "protobufjs"]
+    "onlyBuiltDependencies": [
+      "@firebase/util",
+      "esbuild",
+      "protobufjs",
+      "sharp"
+    ]
   }
 }
