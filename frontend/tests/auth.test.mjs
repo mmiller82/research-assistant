@@ -131,20 +131,18 @@ describe('Research Assistant', () => {
 
     test('login heading and subtitle are visible', async () => {
       const heading = await driver.wait(
-        until.elementLocated(By.css('.auth-container h2')),
+        until.elementLocated(By.id('auth-heading')),
         10000
       );
       expect(await heading.getText()).toBe('Research Assistant');
 
-      const subtitle = await driver.findElement(
-        By.xpath("//div[contains(@class,'auth-container')]//p[contains(text(),'AI-powered')]")
-      );
+      const subtitle = await driver.findElement(By.id('auth-subtitle'));
       expect(await subtitle.isDisplayed()).toBe(true);
     }, 15000);
 
     test('sign in with GitHub button is visible and enabled', async () => {
       const btn = await driver.wait(
-        until.elementLocated(By.css('.btn-signin')),
+        until.elementLocated(By.id('btn-signin')),
         10000
       );
       expect(await btn.getText()).toBe('Sign in with GitHub');
@@ -196,7 +194,7 @@ describe('Research Assistant', () => {
 
     itAuth('header is visible with correct heading', async () => {
       const heading = await driver.wait(
-        until.elementLocated(By.css('.header h2')),
+        until.elementLocated(By.id('header-heading')),
         10000
       );
       expect(await heading.getText()).toBe('Research Assistant');
@@ -204,7 +202,7 @@ describe('Research Assistant', () => {
     }, 15000);  
 
     itAuth('research form inputs are visible', async () => {
-      await driver.wait(until.elementLocated(By.css('.input-form')), 10000);
+      await driver.wait(until.elementLocated(By.id('input-form')), 10000);
 
       const topicInput = await driver.findElement(By.id('topic'));
       expect(await topicInput.isDisplayed()).toBe(true);
@@ -218,7 +216,7 @@ describe('Research Assistant', () => {
 
     itAuth('start research button is present and enabled', async () => {
       const btn = await driver.wait(
-        until.elementLocated(By.css('.btn-primary')),
+        until.elementLocated(By.id('btn-primary')),
         10000
       );
       expect(await btn.getText()).toBe('Start Research');
@@ -226,8 +224,8 @@ describe('Research Assistant', () => {
     }, 15000);
 
     itAuth('sign out button is visible in the header', async () => {
-      await driver.wait(until.elementLocated(By.css('.user-info')), 10000);
-      const signOutBtn = await driver.findElement(By.css('.btn-signout'));
+      await driver.wait(until.elementLocated(By.id('user-info')), 10000);
+      const signOutBtn = await driver.findElement(By.id('btn-signout'));
       expect(await signOutBtn.getText()).toBe('Sign Out');
       expect(await signOutBtn.isDisplayed()).toBe(true);
     }, 15000);
