@@ -307,8 +307,8 @@ const ResearchAssistant = () => {
     return (
       <div className="research-assistant">
         <div className="auth-container">
-          <h2>Research Assistant</h2>
-          <p>AI-powered research tool with multiple analysts</p>
+          <h2 id="auth-heading">Research Assistant</h2>
+          <p id="auth-subtitle">AI-powered research tool with multiple analysts</p>
           <div className="auth-content">
             <p>Please sign in with GitHub to continue</p>
             {authError && (
@@ -316,7 +316,7 @@ const ResearchAssistant = () => {
                 <p>{authError}</p>
               </div>
             )}
-            <button onClick={handleSignIn} className="btn-signin">
+            <button id="btn-signin" onClick={handleSignIn} className="btn-signin">
               Sign in with GitHub
             </button>
           </div>
@@ -330,16 +330,16 @@ const ResearchAssistant = () => {
       <header className="header">
         <div className="header-content">
           <div>
-            <h2>Research Assistant</h2>
+            <h2 id="header-heading">Research Assistant</h2>
             <p>AI-powered research tool with multiple analysts</p>
           </div>
-          <div className="user-info">
+          <div id="user-info" className="user-info">
             {user?.photoURL && (
               <img src={user.photoURL} alt="User avatar" className="user-avatar" />
             )}
             <div className="user-details">
               <span className="user-name">{user?.displayName || user?.email || 'User'}</span>
-              <button onClick={handleSignOut} className="btn-signout">
+              <button id="btn-signout" onClick={handleSignOut} className="btn-signout">
                 Sign Out
               </button>
             </div>
@@ -348,7 +348,7 @@ const ResearchAssistant = () => {
       </header>
 
       <div className="container">
-        <form onSubmit={handleSubmit} className="input-form">
+        <form id="input-form" onSubmit={handleSubmit} className="input-form">
           <div className="form-group">
             <label htmlFor="topic">Research Topic:</label>
             <input
@@ -390,7 +390,7 @@ const ResearchAssistant = () => {
           </div>
 
           <div className="button-container">
-          <button type="submit" disabled={isRunning} className="btn-primary">
+          <button id="btn-primary" type="submit" disabled={isRunning} className="btn-primary">
             {isRunning ? 'Running...' : 'Start Research'}
           </button>
           </div>
