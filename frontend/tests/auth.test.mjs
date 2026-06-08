@@ -61,7 +61,8 @@ function buildFirebaseUser(apiKey, { localId, email, idToken, refreshToken, expi
 }
 
 async function takeScreenshot(driver, file) {
-  const image = await driver.takeScreenshot();
+  const modal = await driver.wait(until.elementLocated(By.id('auth-modal')), 10000);
+  const image = await modal.takeScreenshot();
   await fs.writeFile(file, image, 'base64');
   return image;
 }

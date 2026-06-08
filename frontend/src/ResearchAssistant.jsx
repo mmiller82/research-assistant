@@ -306,7 +306,7 @@ const ResearchAssistant = () => {
   if (!isAuthenticated) {
     return (
       <div className="research-assistant">
-        <div className="auth-container">
+        <div id="auth-modal" className="auth-container">
           <h2 id="auth-heading">Research Assistant</h2>
           <p id="auth-subtitle">AI-powered research tool with multiple analysts</p>
           <div className="auth-content">
