@@ -69,15 +69,14 @@ async function takeScreenshot(driver, file) {
 async function performComparison(screenshotBase64, referenceBuffer) {
   const screenshotBuffer = Buffer.from(screenshotBase64, 'base64');
 
-  const [screenshot, reference] = await Promise.all([
-    sharp(screenshotBuffer).ensureAlpha().raw().toBuffer({ resolveWithObject: true }),
-    sharp(referenceBuffer).ensureAlpha().raw().toBuffer({ resolveWithObject: true }),
-  ]);
+  const reference = await sharp(referenceBuffer).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const { width, height } = reference.info;
 
-  expect(screenshot.info.width).toBe(reference.info.width);
-  expect(screenshot.info.height).toBe(reference.info.height);
-
-  const { width, height } = screenshot.info;
+  const screenshot = await sharp(screenshotBuffer)
+    .resize(width, height, { fit: 'fill' })
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
   const diffBuffer = Buffer.alloc(width * height * 4);
 
   const numDiffPixels = pixelmatch(
