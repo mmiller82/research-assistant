@@ -105,7 +105,7 @@ describe('Research Assistant', () => {
       '--no-sandbox',
       '--disable-dev-shm-usage',
       '--disable-gpu',
-      '--window-size=1256,800'
+      '--window-size=1256,1024'
     );
     driver = await new Builder()
       .forBrowser('chrome')
