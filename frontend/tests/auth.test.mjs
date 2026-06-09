@@ -3,6 +3,9 @@ import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import { Builder, By, until } from 'selenium-webdriver';
 import chrome from 'selenium-webdriver/chrome';
+import * as fs from 'node:fs/promises';
+import pixelmatch from 'pixelmatch';
+import sharp from 'sharp';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -13,6 +16,8 @@ const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:4173';
 const FIREBASE_API_KEY = process.env.VITE_FIREBASE_API_KEY;
 const TEST_USER_EMAIL = process.env.TEST_USER_EMAIL;
 const TEST_USER_PASSWORD = process.env.TEST_USER_PASSWORD;
+const MODAL_IMAGE = 'login-modal.png';
+const REFERENCE_MODAL_PATH = 'tests/testdata/reference-login-modal.png';
 
 // Signs in the Firebase test user via REST API and returns real tokens.
 // Requires TEST_USER_EMAIL and TEST_USER_PASSWORD to be set (see Readme)
@@ -55,6 +60,44 @@ function buildFirebaseUser(apiKey, { localId, email, idToken, refreshToken, expi
   };
 }
 
+async function takeScreenshot(driver, file) {
+  const modal = await driver.wait(until.elementLocated(By.id('auth-modal')), 10000);
+  const image = await modal.takeScreenshot();
+  await fs.writeFile(file, image, 'base64');
+  return image;
+}
+
+async function performComparison(screenshotBase64, referenceBuffer) {
+  const screenshotBuffer = Buffer.from(screenshotBase64, 'base64');
+
+  const screenshot = await sharp(screenshotBuffer)
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  const { width, height } = screenshot.info;
+
+  const reference = await sharp(referenceBuffer)
+    .resize(width, height)
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const diffBuffer = Buffer.alloc(width * height * 4);
+
+  const numDiffPixels = pixelmatch(
+    screenshot.data, reference.data, diffBuffer,
+    width, height,
+    { threshold: 0.2 }
+  );
+
+  await sharp(diffBuffer, { raw: { width, height, channels: 4 } })
+    .png()
+    .toFile('diff-login-modal.png');
+
+  const diffPercent = (numDiffPixels / (width * height)) * 100;
+  expect(diffPercent).toBeLessThan(5);
+}
+
 describe('Research Assistant', () => {
   let driver;
 
@@ -65,7 +108,7 @@ describe('Research Assistant', () => {
       '--no-sandbox',
       '--disable-dev-shm-usage',
       '--disable-gpu',
-      '--window-size=1280,800'
+      '--window-size=1256,1024'
     );
     driver = await new Builder()
       .forBrowser('chrome')
@@ -92,26 +135,33 @@ describe('Research Assistant', () => {
 
     test('login heading and subtitle are visible', async () => {
       const heading = await driver.wait(
-        until.elementLocated(By.css('.auth-container h2')),
+        until.elementLocated(By.id('auth-heading')),
         10000
       );
       expect(await heading.getText()).toBe('Research Assistant');
 
-      const subtitle = await driver.findElement(
-        By.xpath("//div[contains(@class,'auth-container')]//p[contains(text(),'AI-powered')]")
-      );
+      const subtitle = await driver.findElement(By.id('auth-subtitle'));
       expect(await subtitle.isDisplayed()).toBe(true);
     }, 15000);
 
     test('sign in with GitHub button is visible and enabled', async () => {
       const btn = await driver.wait(
-        until.elementLocated(By.css('.btn-signin')),
+        until.elementLocated(By.id('btn-signin')),
         10000
       );
       expect(await btn.getText()).toBe('Sign in with GitHub');
       expect(await btn.isDisplayed()).toBe(true);
       expect(await btn.isEnabled()).toBe(true);
     }, 15000);
+
+    test('compare login modal', async () => {
+      const modalImage = await takeScreenshot(driver, MODAL_IMAGE);
+      const referenceImage = await fs.readFile(REFERENCE_MODAL_PATH);
+
+      await performComparison(modalImage, referenceImage);
+    }, 15000);
+
+
   });
 
   // ── Main page (authenticated) ─────────────────────────────────────────────
@@ -148,15 +198,15 @@ describe('Research Assistant', () => {
 
     itAuth('header is visible with correct heading', async () => {
       const heading = await driver.wait(
-        until.elementLocated(By.css('.header h2')),
+        until.elementLocated(By.id('header-heading')),
         10000
       );
       expect(await heading.getText()).toBe('Research Assistant');
       expect(await heading.isDisplayed()).toBe(true);
-    }, 15000);
+    }, 15000);  
 
     itAuth('research form inputs are visible', async () => {
-      await driver.wait(until.elementLocated(By.css('.input-form')), 10000);
+      await driver.wait(until.elementLocated(By.id('input-form')), 10000);
 
       const topicInput = await driver.findElement(By.id('topic'));
       expect(await topicInput.isDisplayed()).toBe(true);
@@ -170,7 +220,7 @@ describe('Research Assistant', () => {
 
     itAuth('start research button is present and enabled', async () => {
       const btn = await driver.wait(
-        until.elementLocated(By.css('.btn-primary')),
+        until.elementLocated(By.id('btn-primary')),
         10000
       );
       expect(await btn.getText()).toBe('Start Research');
@@ -178,8 +228,8 @@ describe('Research Assistant', () => {
     }, 15000);
 
     itAuth('sign out button is visible in the header', async () => {
-      await driver.wait(until.elementLocated(By.css('.user-info')), 10000);
-      const signOutBtn = await driver.findElement(By.css('.btn-signout'));
+      await driver.wait(until.elementLocated(By.id('user-info')), 10000);
+      const signOutBtn = await driver.findElement(By.id('btn-signout'));
       expect(await signOutBtn.getText()).toBe('Sign Out');
       expect(await signOutBtn.isDisplayed()).toBe(true);
     }, 15000);
