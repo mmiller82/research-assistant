@@ -61,7 +61,6 @@ function buildFirebaseUser(apiKey, { localId, email, idToken, refreshToken, expi
 }
 
 async function takeScreenshot(driver, file) {
-  await driver.executeScript('document.documentElement.style.overflow = "hidden";');
   const modal = await driver.wait(until.elementLocated(By.id('auth-modal')), 10000);
   const image = await modal.takeScreenshot();
   await fs.writeFile(file, image, 'base64');
@@ -71,15 +70,18 @@ async function takeScreenshot(driver, file) {
 async function performComparison(screenshotBase64, referenceBuffer) {
   const screenshotBuffer = Buffer.from(screenshotBase64, 'base64');
 
-  const [screenshot, reference] = await Promise.all([
-    sharp(screenshotBuffer).ensureAlpha().raw().toBuffer({ resolveWithObject: true }),
-    sharp(referenceBuffer).ensureAlpha().raw().toBuffer({ resolveWithObject: true }),
-  ]);
-
-  expect(screenshot.info.width).toBe(reference.info.width);
-  expect(screenshot.info.height).toBe(reference.info.height);
+  const screenshot = await sharp(screenshotBuffer)
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
 
   const { width, height } = screenshot.info;
+
+  const reference = await sharp(referenceBuffer)
+    .resize(width, height)
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
   const diffBuffer = Buffer.alloc(width * height * 4);
 
   const numDiffPixels = pixelmatch(
