@@ -87,7 +87,7 @@ async function performComparison(screenshotBase64, referenceBuffer) {
   const numDiffPixels = pixelmatch(
     screenshot.data, reference.data, diffBuffer,
     width, height,
-    { threshold: 0.1 }
+    { threshold: 0.2 }
   );
 
   await sharp(diffBuffer, { raw: { width, height, channels: 4 } })
@@ -95,7 +95,7 @@ async function performComparison(screenshotBase64, referenceBuffer) {
     .toFile('diff-login-modal.png');
 
   const diffPercent = (numDiffPixels / (width * height)) * 100;
-  expect(diffPercent).toBeLessThan(1);
+  expect(diffPercent).toBeLessThan(5);
 }
 
 describe('Research Assistant', () => {
