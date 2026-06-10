@@ -95,5 +95,26 @@ The frontend pipeline builds the app with all `VITE_*` secrets baked in, starts 
 | `TEST_USER_EMAIL` | Tests |
 | `TEST_USER_PASSWORD` | Tests |
 
+## Backend CI / Cloud Run Deployment
+
+The backend pipeline (`.github/workflows/backend-pipeline.yaml`) triggers on any push to `agent/**` and can also be run manually via `workflow_dispatch`.
+
+It performs the following steps:
+
+1. **Build** — runs `langgraph build -t research-assistant:latest` inside the `agent/` directory, baking in the required API keys.
+2. **Authenticate** — uses [Workload Identity Federation](https://cloud.google.com/iam/docs/workload-identity-federation) to authenticate to Google Cloud (no long-lived service account key stored in GitHub).
+3. **Push** — tags and pushes the Docker image to Artifact Registry at `us-west1-docker.pkg.dev/<project>/cloud-run-source-deploy/reseach-assistant:latest`.
+
+### GitHub Actions secrets required
+
+| Secret | Used by |
+|---|---|
+| `OPENAI_API_KEY` | LangGraph build |
+| `TAVILY_API_KEY` | LangGraph build |
+| `LANGSMITH_API_KEY` | LangGraph build |
+| `GCP_WORKLOAD_PROVIDER` | Workload Identity authentication |
+| `GCP_SA_EMAIL` | Workload Identity authentication |
+| `GCP_PROJECT_ID` | Artifact Registry image URI |
+
 ## Documentation 📚
 - [LangGraph Platform Docs](https://langchain-ai.github.io/langgraph/cloud/deployment/cloud/)
