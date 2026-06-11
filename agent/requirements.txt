@@ -1,6 +1,7 @@
 langgraph
 langgraph-api
 langgraph-cli
+langgraph_sdk
 langchain-core
 langchain-community
 langchain-openai
