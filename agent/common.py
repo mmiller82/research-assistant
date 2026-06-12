@@ -1,11 +1,15 @@
+"""Shared Pydantic models for the research assistant agent."""
 import operator
+from typing import Annotated
+
 from pydantic import BaseModel, Field
 from langgraph.graph import MessagesState
-from typing import Annotated
 
 
 ###  Common Schema
 class Analyst(BaseModel):
+    """An AI analyst persona with a specific research focus."""
+
     affiliation: str = Field(
         description="Primary affiliation of the analyst.",
     )
@@ -20,10 +24,13 @@ class Analyst(BaseModel):
     )
     @property
     def persona(self) -> str:
+        """Return a formatted string summary of the analyst's identity."""
         return f"Name: {self.name}\nRole: {self.role}\nAffiliation: {self.affiliation}\nDescription: {self.description}\n"
-    
+
 
 class InterviewState(MessagesState):
+    """State for a single analyst interview sub-graph."""
+
     max_num_turns: int # Number turns of conversation
     context: Annotated[list, operator.add] # Source docs
     analyst: Analyst # Analyst asking questions
