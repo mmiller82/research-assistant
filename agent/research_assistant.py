@@ -1,3 +1,4 @@
+"""Research assistant LangGraph agent."""
 from functools import partial
 import operator
 from typing import Annotated, List
@@ -9,7 +10,7 @@ from typing_extensions import TypedDict
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, get_buffer_string
 from langchain_openai import ChatOpenAI
 
-from langgraph.constants import Send
+from langgraph.types import Send
 from langgraph.graph import END, START, StateGraph
 
 from common import Analyst, InterviewState
