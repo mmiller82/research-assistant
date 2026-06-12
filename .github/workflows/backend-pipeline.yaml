@@ -53,7 +53,7 @@ jobs:
           TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
           LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
         run: |
-          IMAGE_URI="us-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/cloud-run-source-deploy/reseach-assistant:latest"
+          IMAGE_URI="us-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/cloud-run-source-deploy/research-assistant:latest"
           langgraph build -t "$IMAGE_URI"
           docker push "$IMAGE_URI"
 
