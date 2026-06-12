@@ -2,7 +2,7 @@
 from langchain_tavily import TavilySearch
 from langchain_openai import ChatOpenAI
 from common import InterviewState
-from tools.seach_instructions import SearchQuery, search_instructions
+from tools.search_instructions import SearchQuery, search_instructions
 
 def search_web(state: InterviewState, llm: ChatOpenAI):
     """ Retrieve docs from web search """
