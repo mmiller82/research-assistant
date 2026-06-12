@@ -1,14 +1,16 @@
+"""Research assistant LangGraph agent."""
 from functools import partial
 import operator
+from typing import Annotated, List
+
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
-from typing import Annotated, List
 from typing_extensions import TypedDict
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, get_buffer_string
 from langchain_openai import ChatOpenAI
 
-from langgraph.constants import Send
+from langgraph.types import Send
 from langgraph.graph import END, START, StateGraph
 
 from common import Analyst, InterviewState
@@ -31,24 +33,32 @@ from constants import (
 load_dotenv()
 
 ### LLM
-llm = ChatOpenAI(model=MODEL_NAME, temperature=MODEL_TEMPERATURE) 
+llm = ChatOpenAI(model=MODEL_NAME, temperature=MODEL_TEMPERATURE)
 
-### Schema 
+### Schema
 class Perspectives(BaseModel):
+    """Structured output holding the list of generated analyst personas."""
+
     analysts: List[Analyst] = Field(
         description="Comprehensive list of analysts with their roles and affiliations.",
     )
 
 class GenerateAnalystsState(TypedDict):
+    """State for the analyst-generation sub-graph."""
+
     topic: str # Research topic
     max_analysts: int # Number of analysts
     human_analyst_feedback: str # Human feedback
     analysts: List[Analyst] # Analyst asking questions
 
 class SearchQuery(BaseModel):
+    """Structured output for a web or Wikipedia search query."""
+
     search_query: str = Field(None, description="Search query for retrieval.")
 
 class ResearchGraphState(TypedDict):
+    """Top-level state for the research assistant graph."""
+
     topic: str # Research topic
     max_analysts: int # Number of analysts
     human_analyst_feedback: str # Human feedback
@@ -67,35 +77,35 @@ Editorial feedback (if any): {human_analyst_feedback}
 Identify the {max_analysts} most compelling sub-themes from the topic and feedback. Assign one analyst persona to each theme."""
 
 def create_analysts(state: GenerateAnalystsState):
-    
+
     """ Create analysts """
     topic=state['topic']
-   
+
     if 'max_analysts' in state and state['max_analysts'] is not None:
         max_analysts=state['max_analysts']
     else:
         max_analysts=DEFAULT_MAX_ANALYSTS
 
-    if 'human_analyst_feedback' in state:    
+    if 'human_analyst_feedback' in state:
         human_analyst_feedback=state.get('human_analyst_feedback')
     else:
         human_analyst_feedback=''
-        
+
     # Enforce structured output
     structured_llm = llm.with_structured_output(Perspectives)
 
     # System message
     system_message = analyst_instructions.format(topic=topic,
-                                                            human_analyst_feedback=human_analyst_feedback, 
+                                                            human_analyst_feedback=human_analyst_feedback,
                                                             max_analysts=max_analysts)
 
-    # Generate question 
+    # Generate question
     analysts = structured_llm.invoke([SystemMessage(content=system_message)]+[HumanMessage(content="Generate the set of analysts.")])
-    
+
     # Write the list of analysis to state
     return {"analysts": analysts.analysts}
 
-def human_feedback(state: GenerateAnalystsState):
+def human_feedback(_state: GenerateAnalystsState):
     """ No-op node that should be interrupted on """
     pass
 
@@ -120,10 +130,10 @@ def generate_question(state: InterviewState):
     analyst = state["analyst"]
     messages = state["messages"]
 
-    # Generate question 
+    # Generate question
     system_message = question_instructions.format(goals=analyst.persona)
     question = llm.invoke([SystemMessage(content=system_message)]+messages)
-        
+
     # Write messages to state
     return {"messages": [question]}
 
@@ -144,7 +154,7 @@ Citation rules:
 4. For document sources like <Document source="assistant/docs/llama3_1.pdf" page="7"/>, cite as: [1] assistant/docs/llama3_1.pdf, page 7"""
 
 def generate_answer(state: InterviewState):
-    
+
     """ Node to answer a question """
 
     # Get state
@@ -155,23 +165,23 @@ def generate_answer(state: InterviewState):
     # Answer question
     system_message = answer_instructions.format(goals=analyst.persona, context=context)
     answer = llm.invoke([SystemMessage(content=system_message)]+messages)
-            
+
     # Name the message as coming from the expert
     answer.name = "expert"
-    
+
     # Append it to state
     return {"messages": [answer]}
 
 def save_interview(state: InterviewState):
-    
+
     """ Save interviews """
 
     # Get messages
     messages = state["messages"]
-    
+
     # Convert interview to a string
     interview = get_buffer_string(messages)
-    
+
     # Save to interviews key
     return {"interview": interview}
 
@@ -179,12 +189,12 @@ def route_messages(state: InterviewState,
                    name: str = EXPERT_NAME):
 
     """ Route between question and answer """
-    
+
     # Get messages
     messages = state["messages"]
     max_num_turns = state.get('max_num_turns',DEFAULT_MAX_TURNS)
 
-    # Check the number of expert answers 
+    # Check the number of expert answers
     num_responses = len(
         [m for m in messages if isinstance(m, AIMessage) and m.name == name]
     )
@@ -223,7 +233,6 @@ def write_section(state: InterviewState):
     """ Node to write a section """
 
     # Get state
-    interview = state["interview"]
     context = state["context"]
     analyst = state["analyst"]
 
@@ -234,7 +243,7 @@ def write_section(state: InterviewState):
     # Append it to state
     return {"sections": [section.content]}
 
-# Add nodes and edges 
+# Add nodes and edges
 interview_builder = StateGraph(InterviewState)
 interview_builder.add_node("ask_question", generate_question)
 interview_builder.add_node("search_web", partial(search_web, llm=llm))
@@ -254,7 +263,7 @@ interview_builder.add_edge("save_interview", "write_section")
 interview_builder.add_edge("write_section", END)
 
 def begin_all_interviews(state: ResearchGraphState):
-    """ Conditional edge to initiate all interviews via Send() API or return to create_analysts """    
+    """ Conditional edge to initiate all interviews via Send() API or return to create_analysts """
 
     # Check if human feedback
     human_analyst_feedback=state.get('human_analyst_feedback','yes')
@@ -302,10 +311,10 @@ def write_report(state: ResearchGraphState):
 
     # Concat all sections together
     formatted_str_sections = "\n\n".join([f"{section}" for section in sections])
-    
+
     # Summarize the sections into a final report
-    system_message = report_writer_instructions.format(topic=topic, context=formatted_str_sections)    
-    report = llm.invoke([SystemMessage(content=system_message)]+[HumanMessage(content=f"Write a report based upon these memos.")]) 
+    system_message = report_writer_instructions.format(topic=topic, context=formatted_str_sections)
+    report = llm.invoke([SystemMessage(content=system_message)]+[HumanMessage(content="Write a report based upon these memos.")])
     return {"content": report.content}
 
 # Write the introduction or conclusion
@@ -336,7 +345,7 @@ def write_introduction(state: ResearchGraphState):
     # Summarize the sections into a final report
 
     instructions = intro_conclusion_instructions.format(topic=topic, formatted_str_sections=formatted_str_sections, intro_conclusion_target_words=INTRO_CONCLUSION_TARGET_WORDS)
-    intro = llm.invoke([instructions]+[HumanMessage(content=f"Write the report introduction")])
+    intro = llm.invoke([instructions]+[HumanMessage(content="Write the report introduction")])
     return {"introduction": intro.content}
 
 def write_conclusion(state: ResearchGraphState):
@@ -352,7 +361,7 @@ def write_conclusion(state: ResearchGraphState):
     # Summarize the sections into a final report
 
     instructions = intro_conclusion_instructions.format(topic=topic, formatted_str_sections=formatted_str_sections, intro_conclusion_target_words=INTRO_CONCLUSION_TARGET_WORDS)
-    conclusion = llm.invoke([instructions]+[HumanMessage(content=f"Write the report conclusion")])
+    conclusion = llm.invoke([instructions]+[HumanMessage(content="Write the report conclusion")])
     return {"conclusion": conclusion.content}
 
 def finalize_report(state: ResearchGraphState):
@@ -365,7 +374,7 @@ def finalize_report(state: ResearchGraphState):
     if "## Sources" in content:
         try:
             content, sources = content.split(REPORT_SOURCES_SEPARATOR)
-        except:
+        except ValueError:
             sources = None
     else:
         sources = None
@@ -375,7 +384,7 @@ def finalize_report(state: ResearchGraphState):
         final_report += REPORT_SOURCES_SEPARATOR + sources
     return {"final_report": final_report}
 
-# Add nodes and edges 
+# Add nodes and edges
 builder = StateGraph(ResearchGraphState)
 builder.add_node("create_analysts", create_analysts)
 builder.add_node("human_feedback", human_feedback)

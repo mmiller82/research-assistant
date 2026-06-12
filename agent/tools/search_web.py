@@ -1,8 +1,8 @@
-
+"""Web search tool using Tavily."""
 from langchain_tavily import TavilySearch
 from langchain_openai import ChatOpenAI
 from common import InterviewState
-from tools.seach_instructions import SearchQuery, search_instructions
+from tools.search_instructions import SearchQuery, search_instructions
 
 def search_web(state: InterviewState, llm: ChatOpenAI):
     """ Retrieve docs from web search """
@@ -13,7 +13,7 @@ def search_web(state: InterviewState, llm: ChatOpenAI):
     # Search query
     structured_llm = llm.with_structured_output(SearchQuery)
     search_query = structured_llm.invoke([search_instructions]+state['messages'])
-    
+
     # Search
     data = tavily_search.invoke({"query": search_query.search_query})
     search_docs = data.get("results", data)
@@ -26,4 +26,4 @@ def search_web(state: InterviewState, llm: ChatOpenAI):
         ]
     )
 
-    return {"context": [formatted_search_docs]} 
+    return {"context": [formatted_search_docs]}
