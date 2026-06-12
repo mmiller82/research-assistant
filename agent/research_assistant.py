@@ -36,20 +36,28 @@ llm = ChatOpenAI(model=MODEL_NAME, temperature=MODEL_TEMPERATURE)
 
 ### Schema
 class Perspectives(BaseModel):
+    """Structured output holding the list of generated analyst personas."""
+
     analysts: List[Analyst] = Field(
         description="Comprehensive list of analysts with their roles and affiliations.",
     )
 
 class GenerateAnalystsState(TypedDict):
+    """State for the analyst-generation sub-graph."""
+
     topic: str # Research topic
     max_analysts: int # Number of analysts
     human_analyst_feedback: str # Human feedback
     analysts: List[Analyst] # Analyst asking questions
 
 class SearchQuery(BaseModel):
+    """Structured output for a web or Wikipedia search query."""
+
     search_query: str = Field(None, description="Search query for retrieval.")
 
 class ResearchGraphState(TypedDict):
+    """Top-level state for the research assistant graph."""
+
     topic: str # Research topic
     max_analysts: int # Number of analysts
     human_analyst_feedback: str # Human feedback
@@ -96,7 +104,7 @@ def create_analysts(state: GenerateAnalystsState):
     # Write the list of analysis to state
     return {"analysts": analysts.analysts}
 
-def human_feedback(state: GenerateAnalystsState):
+def human_feedback(_state: GenerateAnalystsState):
     """ No-op node that should be interrupted on """
     pass
 
