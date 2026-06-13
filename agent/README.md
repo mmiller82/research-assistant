@@ -80,10 +80,11 @@ The backend pipeline (`.github/workflows/backend-pipeline.yaml`) triggers on any
 Runs after `build` succeeds (`needs: build`).
 
 1. Re-authenticates to Google Cloud and pulls the image built by the `build` job.
-2. Starts the container on port `8123` and waits up to 60 seconds for `/ok` to respond.
-3. Runs the research client against the live container (`RESEARCH_TOPIC` and `REPORT_FILE` are defined as workflow-level env vars).
-4. Evaluates the report using the LLM-as-judge evaluator.
-5. Stops and removes the container (`if: always()` ensures cleanup on failure).
+2. Starts the container on port `8123` and waits up to 120 seconds for `/ok` to respond.
+3. Outputs log on failure
+4. Runs the research client against the live container (`RESEARCH_TOPIC` and `REPORT_FILE` are defined as workflow-level env vars).
+5. Evaluates the report using the LLM-as-judge evaluator.
+6. Stops and removes the container (`if: always()` ensures cleanup on failure).
 
 ### GitHub Actions secrets required
 
