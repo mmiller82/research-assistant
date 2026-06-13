@@ -133,4 +133,4 @@ jobs:
 
       - name: Stop LangGraph API server
         if: always()
-        run: docker stop langgraph-api && docker rm langgraph-api
+        run: docker compose down

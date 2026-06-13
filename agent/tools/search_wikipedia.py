@@ -13,8 +13,11 @@ def search_wikipedia(state: InterviewState, llm: ChatOpenAI):
     search_query = structured_llm.invoke([search_instructions]+state['messages'])
 
     # Search
-    search_docs = WikipediaLoader(query=search_query.search_query,
-                                  load_max_docs=2).load()
+    try:
+        search_docs = WikipediaLoader(query=search_query.search_query,
+                                      load_max_docs=2).load()
+    except Exception:
+        return {"context": []}
 
     # Format
     formatted_search_docs = "\n\n---\n\n".join(
