@@ -75,6 +75,7 @@ The backend pipeline (`.github/workflows/backend-pipeline.yaml`) triggers on any
 2. Authenticates to Google Cloud via [Workload Identity Federation](https://cloud.google.com/iam/docs/workload-identity-federation) (no long-lived service account key stored in GitHub).
 3. Runs `langgraph build -t "$IMAGE_URI"` and pushes the image to Artifact Registry at `us-west1-docker.pkg.dev/<project>/cloud-run-source-deploy/research-assistant:<sha>`.
 
+
 ### `test-image` job
 
 Runs after `build` succeeds (`needs: build`).

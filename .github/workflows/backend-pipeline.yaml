@@ -115,7 +115,7 @@ jobs:
 
       - name: Dump container logs on failure
         if: failure()
-        run: docker logs langgraph-api
+        run: docker logs agent-langgraph-api-1
 
       - name: Generate research report
         working-directory: client
@@ -123,7 +123,7 @@ jobs:
 
       - name: Dump container logs on failure
         if: failure()
-        run: docker logs langgraph-api
+        run: docker logs agent-langgraph-api-1
    
       - name: Evaluate report
         working-directory: client
