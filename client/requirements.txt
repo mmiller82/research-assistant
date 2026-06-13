@@ -1,2 +1,4 @@
-langgraph-cli
 langgraph_sdk
+langchain-openai
+pydantic
+python-dotenv

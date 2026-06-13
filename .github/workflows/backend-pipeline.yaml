@@ -133,4 +133,5 @@ jobs:
 
       - name: Stop LangGraph API server
         if: always()
-        run: docker compose down
+        working-directory: agent
+        run: docker compose -f test-compose.yml down
