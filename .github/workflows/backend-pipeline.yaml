@@ -121,6 +121,10 @@ jobs:
         working-directory: client
         run: python research_client.py "$RESEARCH_TOPIC" --accept --output $REPORT_FILE
 
+      - name: Dump container logs on failure
+        if: failure()
+        run: docker logs langgraph-api
+   
       - name: Evaluate report
         working-directory: client
         env:
