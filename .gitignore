@@ -36,3 +36,9 @@ agent/__pycache__
 agent/out
 agent/openapi-run.yaml
 agent/docker-compose.yml
+
+client/*.md
+
+# Frontend
+frontend/*.json
+frontend/*.png
