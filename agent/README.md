@@ -67,18 +67,29 @@ The API is available at `http://localhost:8123`. The graph name is `research_ass
 
 ## CI / Cloud Run Deployment
 
-The backend pipeline (`.github/workflows/backend-pipeline.yaml`) triggers on any push to `agent/**` and can also be run manually via `workflow_dispatch`.
+The backend pipeline (`.github/workflows/backend-pipeline.yaml`) triggers on any push to `agent/**` and can also be run manually via `workflow_dispatch`. It runs two sequential jobs:
 
-Steps:
-1. **Build** — runs `langgraph build -t research-assistant:latest` inside the `agent/` directory, baking in the required API keys.
-2. **Authenticate** — uses [Workload Identity Federation](https://cloud.google.com/iam/docs/workload-identity-federation) to authenticate to Google Cloud (no long-lived service account key stored in GitHub).
-3. **Push** — tags and pushes the image to Artifact Registry at `us-west1-docker.pkg.dev/<project>/cloud-run-source-deploy/research-assistant:latest`.
+### `build` job
+
+1. Computes the image URI using the short commit SHA (`${GITHUB_SHA::7}`) and writes it to `$GITHUB_ENV`.
+2. Authenticates to Google Cloud via [Workload Identity Federation](https://cloud.google.com/iam/docs/workload-identity-federation) (no long-lived service account key stored in GitHub).
+3. Runs `langgraph build -t "$IMAGE_URI"` and pushes the image to Artifact Registry at `us-west1-docker.pkg.dev/<project>/cloud-run-source-deploy/research-assistant:<sha>`.
+
+### `test-image` job
+
+Runs after `build` succeeds (`needs: build`).
+
+1. Re-authenticates to Google Cloud and pulls the image built by the `build` job.
+2. Starts the container on port `8123` and waits up to 60 seconds for `/ok` to respond.
+3. Runs the research client against the live container (`RESEARCH_TOPIC` and `REPORT_FILE` are defined as workflow-level env vars).
+4. Evaluates the report using the LLM-as-judge evaluator.
+5. Stops and removes the container (`if: always()` ensures cleanup on failure).
 
 ### GitHub Actions secrets required
 
 | Secret | Used by |
 |---|---|
-| `OPENAI_API_KEY` | LangGraph build |
+| `OPENAI_API_KEY` | LangGraph build + evaluation |
 | `TAVILY_API_KEY` | LangGraph build |
 | `LANGSMITH_API_KEY` | LangGraph build |
 | `GCP_WORKLOAD_PROVIDER` | Workload Identity authentication |

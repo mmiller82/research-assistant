@@ -6,6 +6,10 @@ on:
       - 'agent/**'
   workflow_dispatch:
 
+env:
+  RESEARCH_TOPIC: "Why is the sky blue"
+  REPORT_FILE: "report.md"
+
 jobs:
   build:
     name: Build and push Docker image
@@ -16,16 +20,13 @@ jobs:
     defaults:
       run:
         working-directory: agent
-    outputs:
-      image_uri: ${{ steps.set-image-uri.outputs.image_uri }}
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Set image URI
-        id: set-image-uri
         run: |
-          echo "image_uri=us-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/cloud-run-source-deploy/research-assistant:${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+          echo "IMAGE_URI=us-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/cloud-run-source-deploy/research-assistant:${GITHUB_SHA::7}" >> $GITHUB_ENV
 
       - uses: actions/setup-python@v5
         with:
@@ -56,8 +57,8 @@ jobs:
           TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
           LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
         run: |
-          langgraph build -t "${{ steps.set-image-uri.outputs.image_uri }}"
-          docker push "${{ steps.set-image-uri.outputs.image_uri }}"
+          langgraph build -t "$IMAGE_URI"
+          docker push "$IMAGE_URI"
 
   test-image:
     name: Test Docker image
@@ -69,6 +70,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set image URI
+        run: |
+          echo "IMAGE_URI=us-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/cloud-run-source-deploy/research-assistant:${GITHUB_SHA::7}" >> $GITHUB_ENV
 
       - uses: actions/setup-python@v5
         with:
@@ -92,7 +97,7 @@ jobs:
         run: gcloud auth configure-docker us-west1-docker.pkg.dev
 
       - name: Pull Docker image
-        run: docker pull "${{ needs.build.outputs.image_uri }}"
+        run: docker pull "$IMAGE_URI"
 
       - name: Start LangGraph API server
         env:
@@ -104,19 +109,19 @@ jobs:
             -e OPENAI_API_KEY="$OPENAI_API_KEY" \
             -e TAVILY_API_KEY="$TAVILY_API_KEY" \
             -e LANGSMITH_API_KEY="$LANGSMITH_API_KEY" \
-            "${{ needs.build.outputs.image_uri }}"
+            "$IMAGE_URI"
           echo "Waiting for API to be ready..."
           timeout 60 bash -c 'until curl -sf http://localhost:8123/ok; do sleep 2; done'
 
       - name: Generate research report
         working-directory: client
-        run: python research_client.py "Why is the sky blue" --accept --output report.md
+        run: python research_client.py "$RESEARCH_TOPIC" --accept --output $REPORT_FILE
 
       - name: Evaluate report
         working-directory: client
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: python evaluate_report.py "Why is the sky blue" --report report.md
+        run: python evaluate_report.py "$RESEARCH_TOPIC" --report $REPORT_FILE
 
       - name: Stop LangGraph API server
         if: always()
