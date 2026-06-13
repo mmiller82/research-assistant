@@ -99,19 +99,19 @@ jobs:
       - name: Pull Docker image
         run: docker pull "$IMAGE_URI"
 
+      - name: Set up Docker Compose
+        uses: docker/setup-compose-action@v2
+
       - name: Start LangGraph API server
+        working-directory: agent
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
           LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
         run: |
-          docker run -d --name langgraph-api -p 8123:8123 \
-            -e OPENAI_API_KEY="$OPENAI_API_KEY" \
-            -e TAVILY_API_KEY="$TAVILY_API_KEY" \
-            -e LANGSMITH_API_KEY="$LANGSMITH_API_KEY" \
-            "$IMAGE_URI"
+          docker compose -f test-compose.yml -d up 
           echo "Waiting for API to be ready..."
-          timeout 120 bash -c 'until curl -sf http://localhost:8123/ok; do sleep 2; done'
+          timeout 60 bash -c 'until curl -sf http://localhost:8123/ok; do sleep 2; done'
 
       - name: Dump container logs on failure
         if: failure()
