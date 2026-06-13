@@ -6,9 +6,13 @@ on:
       - 'agent/**'
   workflow_dispatch:
 
+env:
+  RESEARCH_TOPIC: "Why is the sky blue"
+  REPORT_FILE: "report.md"
+
 jobs:
-  build-and-deploy:
-    name: Build workflow and deploy to Cloud Run
+  build:
+    name: Build and push Docker image
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -20,9 +24,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
+      - name: Set image URI
+        run: |
+          echo "IMAGE_URI=us-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/cloud-run-source-deploy/research-assistant:${GITHUB_SHA::7}" >> $GITHUB_ENV
 
       - uses: actions/setup-python@v5
         with:
@@ -53,9 +57,81 @@ jobs:
           TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
           LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
         run: |
-          IMAGE_URI="us-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/cloud-run-source-deploy/reseach-assistant:latest"
           langgraph build -t "$IMAGE_URI"
           docker push "$IMAGE_URI"
 
+  test-image:
+    name: Test Docker image
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
 
+    steps:
+      - uses: actions/checkout@v4
 
+      - name: Set image URI
+        run: |
+          echo "IMAGE_URI=us-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/cloud-run-source-deploy/research-assistant:${GITHUB_SHA::7}" >> $GITHUB_ENV
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install client dependencies
+        working-directory: client
+        run: pip install -r requirements.txt
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          token_format: 'access_token'
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_PROVIDER }}
+          service_account: ${{ secrets.GCP_SA_EMAIL }}
+
+      - name: Set up gcloud CLI
+        uses: google-github-actions/setup-gcloud@v1
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker us-west1-docker.pkg.dev
+
+      - name: Pull Docker image
+        run: docker pull "$IMAGE_URI"
+
+      - name: Set up Docker Compose
+        uses: docker/setup-compose-action@v2
+
+      - name: Start LangGraph API server
+        working-directory: agent
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+          LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
+        run: |
+          docker compose -f test-compose.yml up --detach
+          echo "Waiting for API to be ready..."
+          timeout 60 bash -c 'until curl -sf http://localhost:8123/ok; do sleep 2; done'
+
+      - name: Dump container logs on failure
+        if: failure()
+        run: docker logs agent-langgraph-api-1
+
+      - name: Generate research report
+        working-directory: client
+        run: python research_client.py "$RESEARCH_TOPIC" --accept --output $REPORT_FILE
+
+      - name: Dump container logs on failure
+        if: failure()
+        run: docker logs agent-langgraph-api-1
+   
+      - name: Evaluate report
+        working-directory: client
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python evaluate_report.py "$RESEARCH_TOPIC" --report $REPORT_FILE
+
+      - name: Stop LangGraph API server
+        if: always()
+        working-directory: agent
+        run: docker compose -f test-compose.yml down
