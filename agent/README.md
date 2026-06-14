@@ -28,6 +28,7 @@ ask_question → search_web + search_wikipedia (parallel) → answer_question �
 | `tools/search_wikipedia.py` | Wikipedia loader (returns 2 docs) |
 | `tools/search_instructions.py` | Shared `SearchQuery` schema and system prompt |
 | `langgraph.json` | Graph registration, CORS config, Python version |
+| `docker-compose.yaml` | Docker compose configuration file |
 
 ### Human-in-the-Loop
 
