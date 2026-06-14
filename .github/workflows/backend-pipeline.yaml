@@ -150,6 +150,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
+      issues: write
 
     steps:
       - name: Wait for approval

@@ -88,6 +88,15 @@ Runs after `build` succeeds (`needs: build`).
 6. Evaluates the report using the LLM-as-judge evaluator.
 7. Stops and removes the container (`if: always()` ensures cleanup on failure).
 
+### `deploy` job
+
+Runs after `test-image` succeeds (`needs: test-image`) and requires manual approval via a GitHub environment protection rule.
+
+1. Re-authenticates to Google Cloud.
+2. Deploys the image to Cloud Run: `gcloud run deploy`.
+3. Tags the same image as `latest` in Artifact Registry.
+
+
 ### GitHub Actions secrets required
 
 | Secret | Used by |
