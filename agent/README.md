@@ -105,7 +105,7 @@ The pipeline tags each tested image with both a short SHA (`:<sha>`) and `:lates
 
 ```bash
 gcloud run revisions list \
-  --service research-assistant \
+  --service agent \
   --region us-west1 \
   --project <GCP_PROJECT_ID> \
   --format "table(name,status.conditions[0].lastTransitionTime,spec.containers[0].image)"
@@ -114,7 +114,7 @@ gcloud run revisions list \
 **2. Shift traffic to the previous revision**
 
 ```bash
-gcloud run services update-traffic research-assistant \
+gcloud run services update-traffic agent \
   --region us-west1 \
   --project <GCP_PROJECT_ID> \
   --to-revisions <REVISION_NAME>=100
