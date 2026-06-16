@@ -179,6 +179,12 @@ jobs:
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker us-west1-docker.pkg.dev
 
+      - name: Grant Storage Admin to service account
+        run: |
+          gcloud projects add-iam-policy-binding ${{ secrets.GCP_PROJECT_ID }} \
+            --member="serviceAccount:${{ secrets.GCP_SA_EMAIL }}" \
+            --role="roles/storage.admin"
+
       - name: Deploy to Cloud Run
         working-directory: agent
         env:
