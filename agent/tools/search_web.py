@@ -18,10 +18,12 @@ def search_web(state: InterviewState, llm: ChatOpenAI):
     data = tavily_search.invoke({"query": search_query.search_query})
     search_docs = data.get("results", data)
 
-     # Format
+    # Format — TavilySearch may return dicts {url, content} or plain strings
     formatted_search_docs = "\n\n---\n\n".join(
         [
             f'<Document href="{doc["url"]}"/>\n{doc["content"]}\n</Document>'
+            if isinstance(doc, dict)
+            else f'<Document>\n{doc}\n</Document>'
             for doc in search_docs
         ]
     )
