@@ -97,6 +97,43 @@ Runs after `test-image` succeeds (`needs: test-image`) and requires manual appro
 3. Tags the same image as `latest` in Artifact Registry.
 
 
+### Rolling back the latest release
+
+The pipeline tags each tested image with both a short SHA (`:<sha>`) and `:latest`. A rollback re-points Cloud Run traffic to a previous revision without redeploying.
+
+**1. List recent revisions**
+
+```bash
+gcloud run revisions list \
+  --service research-assistant \
+  --region us-west1 \
+  --project <GCP_PROJECT_ID> \
+  --format "table(name,status.conditions[0].lastTransitionTime,spec.containers[0].image)"
+```
+
+**2. Shift traffic to the previous revision**
+
+```bash
+gcloud run services update-traffic research-assistant \
+  --region us-west1 \
+  --project <GCP_PROJECT_ID> \
+  --to-revisions <REVISION_NAME>=100
+```
+
+Replace `<REVISION_NAME>` with the revision name from step 1 (e.g. `research-assistant-00005-abc`).
+
+**3. (Optional) Re-tag the rolled-back image as `latest`**
+
+If you want Artifact Registry's `:latest` tag to reflect the rolled-back version (so the next `gcloud run deploy` without an explicit tag uses the right image):
+
+```bash
+# Find the SHA tag for the revision's image, then:
+gcloud container images add-tag \
+  "us-west1-docker.pkg.dev/<GCP_PROJECT_ID>/cloud-run-source-deploy/research-assistant:<sha>" \
+  "us-west1-docker.pkg.dev/<GCP_PROJECT_ID>/cloud-run-source-deploy/research-assistant:latest" \
+  --quiet
+```
+
 ### GitHub Actions secrets required
 
 | Secret | Used by |
