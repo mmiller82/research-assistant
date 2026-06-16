@@ -134,7 +134,6 @@ gcloud container images add-tag \
   --quiet
 ```
 
-
 ### GitHub Actions secrets required
 
 | Secret | Used by |
