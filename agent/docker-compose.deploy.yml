@@ -1,6 +1,3 @@
-volumes:
-    langgraph-data:
-        driver: local
 services:
     langgraph-redis:
         image: redis:6
@@ -19,13 +16,11 @@ services:
             POSTGRES_DB: postgres
             POSTGRES_USER: postgres
             POSTGRES_PASSWORD: postgres
-        volumes:
-            - langgraph-data:/var/lib/postgresql/data
         healthcheck:
             test: pg_isready -U postgres
-            start_period: 10s
+            start_period: 60s
             timeout: 1s
-            retries: 5
+            retries: 10
             interval: 5s
     langgraph-api:
         image: ${IMAGE_URI}

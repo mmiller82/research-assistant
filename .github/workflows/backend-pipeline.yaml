@@ -109,7 +109,7 @@ jobs:
           TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
           LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
         run: |
-          docker compose -f test-compose.yml up --detach
+          docker compose -f docker-compose.yml up --detach
           echo "Waiting for API to be ready..."
           timeout 60 bash -c 'until curl -sf http://localhost:8123/ok; do sleep 2; done'
 
@@ -131,7 +131,61 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python evaluate_report.py "$RESEARCH_TOPIC" --report $REPORT_FILE
 
+      - name: Retag image as latest
+        run: |
+          gcloud container images add-tag "$IMAGE_URI" \
+            "us-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/cloud-run-source-deploy/research-assistant:latest" \
+            --quiet
+
       - name: Stop LangGraph API server
         if: always()
         working-directory: agent
-        run: docker compose -f test-compose.yml down
+        run: docker compose -f docker-compose.yml down
+
+  production-deploy:
+    name: Deploy to production
+    needs: test-image
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+      issues: write
+
+    steps:
+      - name: Wait for approval
+        uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ secrets.GITHUB_TOKEN }}
+          approvers: mmiller82
+          minimum-approvals: 1
+
+      - uses: actions/checkout@v4
+
+      - name: Set image URI
+        run: |
+          echo "IMAGE_URI=us-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/cloud-run-source-deploy/research-assistant:latest" >> $GITHUB_ENV
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          token_format: 'access_token'
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_PROVIDER }}
+          service_account: ${{ secrets.GCP_SA_EMAIL }}
+
+      - name: Set up gcloud CLI
+        uses: google-github-actions/setup-gcloud@v1
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker us-west1-docker.pkg.dev
+
+      - name: Deploy to Cloud Run
+        working-directory: agent
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+          LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
+        run: |
+          gcloud run compose up docker-compose.deploy.yml --region us-west1 \
+            --project ${{ secrets.GCP_PROJECT_ID }} \
+            --quiet
