@@ -39,14 +39,6 @@ jobs:
           VITE_API_GATEWAY_URL: ${{ secrets.VITE_API_GATEWAY_URL }}
           VITE_CLOUD_RUN_URL: ${{ secrets.VITE_CLOUD_RUN_URL }}
 
-      - uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          entryPoint: "./frontend"
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_RESEARCH_ASSISTANT_6603F }}
-          projectId: research-assistant-6603f
-          channelId: live
-
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
@@ -62,3 +54,12 @@ jobs:
           VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
           TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
           TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+          
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        if: github.ref == 'refs/heads/master'
+        with:
+          entryPoint: "./frontend"
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_RESEARCH_ASSISTANT_6603F }}
+          projectId: research-assistant-6603f
+          channelId: live          
