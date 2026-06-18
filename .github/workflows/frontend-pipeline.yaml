@@ -56,7 +56,7 @@ jobs:
       - name: Wait for preview server
         run: npx wait-on http://localhost:4173
 
-      - name: Run Selenium tests
+      - name: Run Playwright tests
         run: pnpm run test
         env:
           VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}

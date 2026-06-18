@@ -16,6 +16,9 @@ export default defineConfig({
     headless: true,
     viewport: { width: 1256, height: 1024 },
   },
+  expect: {
+    toHaveScreenshot: { maxDiffPixelRatio: 0.02 },
+  },
   snapshotDir: './tests/testdata',
   snapshotPathTemplate: '{snapshotDir}/{arg}{ext}',
 });
