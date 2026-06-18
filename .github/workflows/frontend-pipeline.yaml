@@ -47,7 +47,8 @@ jobs:
           projectId: research-assistant-6603f
           channelId: live
 
-      - uses: browser-actions/setup-chrome@v1
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
 
       - name: Start preview server
         run: pnpm run preview &
