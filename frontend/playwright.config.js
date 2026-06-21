@@ -11,6 +11,7 @@ dotenv.config({ path: path.resolve(__dirname, '.env.local'), override: true });
 export default defineConfig({
   testDir: './tests',
   testMatch: '**/*.spec.js',
+  reporter: [['html'], ['line']],
   use: {
     baseURL: process.env.TEST_BASE_URL || 'http://localhost:4173',
     headless: true,
