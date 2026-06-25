@@ -10,7 +10,8 @@ dotenv.config({ path: path.resolve(__dirname, '.env.local'), override: true });
 
 export default defineConfig({
   testDir: './tests',
-  testMatch: '**/*.spec.js',  
+  testMatch: '**/*.spec.js',
+  testIgnore: ['**/helpers/**', '**/pages/**', '**/utils/**'],
   /* Run tests in files in parallel */
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
@@ -40,7 +41,7 @@ export default defineConfig({
   projects: [
     {
       name: "setup",
-      testMatch: /.*\.setup\.ts|js/,
+      testMatch: /.*\.setup\.(ts|js)/,
     },    
     {
       name: "chromium",

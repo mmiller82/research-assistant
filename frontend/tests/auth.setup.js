@@ -1,4 +1,3 @@
-// spec: frontend/specs/test.plan.md
 // Saves authenticated token data so test suites can inject Firebase auth via IndexedDB.
 // Firebase v9+ uses IndexedDB (not localStorage) for auth persistence, so Playwright's
 // storageState() cannot capture it. Instead we save raw token data to a JSON file and

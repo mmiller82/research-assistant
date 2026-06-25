@@ -1,6 +1,3 @@
-// spec: frontend/specs/test.plan.md
-// seed: frontend/tests/seed.spec.js
-
 import { test, expect } from '@playwright/test';
 import { MainPage } from './pages/MainPage.js';
 import { mockResearchUntilInterrupt } from './utils/research-utils.js';
