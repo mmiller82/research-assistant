@@ -32,7 +32,7 @@ dist-ssr
 .env*
 .next/
 next-env.d.ts
-agent/__pycache__
+agent/**/__pycache__
 agent/out
 agent/openapi-run.yaml
 
@@ -41,3 +41,16 @@ client/*.md
 # Frontend
 frontend/*.json
 frontend/*.png
+frontend/playwright-report/
+frontend/test-results/
+frontend/tests/.auth/
+
+# Application and AI
+.firebase*
+**/.env
+
+# Claude
+.playwright-mcp/
+.mcp.json
+frontend/.claude
+
