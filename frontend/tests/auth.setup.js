@@ -12,7 +12,7 @@ import path from 'path';
 const FIREBASE_API_KEY = process.env.VITE_FIREBASE_API_KEY;
 const TEST_USER_EMAIL = process.env.TEST_USER_EMAIL;
 const TEST_USER_PASSWORD = process.env.TEST_USER_PASSWORD;
-export const AUTH_FILE = 'tests/.auth/user.json';
+const AUTH_FILE = 'tests/.auth/user.json';
 
 setup('authenticate', async ({ page }) => {
   const tokenData = await signInTestUser(FIREBASE_API_KEY, TEST_USER_EMAIL, TEST_USER_PASSWORD);
