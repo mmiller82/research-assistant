@@ -74,6 +74,62 @@ To test the production build locally before deploying:
 firebase emulators:start --only hosting
 ```
 
+## Playwright Tests
+
+End-to-end tests live in `frontend/tests/` and are run with [Playwright](https://playwright.dev/).
+
+### Prerequisites
+
+- A built app served at `http://localhost:4173` (`pnpm run build && pnpm run preview`)
+- A Firebase test user account created in the Firebase console
+- Environment variables set in `frontend/.env.local`:
+
+| Variable | Description |
+|----------|-------------|
+| `VITE_FIREBASE_API_KEY` | Firebase project API key |
+| `TEST_USER_EMAIL` | Email of the Firebase test user |
+| `TEST_USER_PASSWORD` | Password of the Firebase test user |
+
+### Running the tests
+
+```bash
+# Install Playwright browsers (first time only)
+npx playwright install --with-deps chromium
+
+# Build and serve the app, then run tests
+pnpm run build
+pnpm run preview &
+pnpm run test
+```
+
+### How authentication works
+
+Firebase v9 stores auth state in IndexedDB, which Playwright's `storageState` cannot capture. Instead:
+
+1. A global setup step (`tests/auth.setup.js`) signs in via the Firebase REST API and writes the user token to `tests/.auth/user.json`.
+2. Each authenticated test calls `injectAuth(page)` from `tests/helpers/auth-inject.js` before `page.goto()`. This registers an `addInitScript` that pre-seeds Firebase's IndexedDB so the app boots in an authenticated state.
+
+### Test structure
+
+| File | What it covers |
+|------|----------------|
+| `tests/auth.spec.js` | Login page, authenticated main page, sign-out flows |
+| `tests/research-form.spec.js` | Form validation (empty topic, analyst count, special characters) |
+| `tests/research-workflow.spec.js` | Streaming progress, status messages, button states |
+| `tests/human-in-the-loop.spec.js` | Analyst review panel, feedback submission, analyst regeneration |
+| `tests/report.spec.js` | Final report display and structure |
+
+LangGraph API calls are intercepted with `page.route()` mocks (see `tests/helpers/langgraph-mock.js`) so tests run without a live backend.
+
+### Playwright config
+
+The config (`playwright.config.js`) runs two projects:
+
+- **setup** — runs `*.setup.js` files before any spec; creates `tests/.auth/user.json`
+- **chromium** — runs all `*.spec.js` files; depends on setup completing successfully
+
+On CI, retries are set to 2 and workers to 1. Traces are always captured; video and screenshots are retained on failure.
+
 ## CI/CD — GitHub Actions
 
 The workflow at `.github/workflows/frontend-pipeline.yaml` builds the frontend and deploys it to Firebase Hosting automatically through the following triggers.

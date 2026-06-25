@@ -19,4 +19,11 @@ export class MainPage {
     );
     await this.page.reload();
   }
+
+  async getFirebaseAuthEntry(apiKey) {
+    return this.page.evaluate(
+      (key) => localStorage.getItem(key),
+      `firebase:authUser:${apiKey}:[DEFAULT]`
+    );
+  }
 }
